@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { CiSearch } from "react-icons/ci";
 import { IoSunny } from "react-icons/io5";
 import  humidity  from "../../assets/humidity.png"
@@ -6,6 +6,26 @@ import  windSpeed  from "../../assets/wind_speed.png";
 import styles from "./Weather.module.css";
 
 const Weather = () => {
+
+    const searchWeather = async (city) => {
+        try {
+          const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${
+            import.meta.env.VITE_APP_ID
+                }`;
+            
+            const response = await fetch(url);          
+            const data = await response.json();
+            console.log(data);
+
+        } catch (error) {
+            
+        }
+    }
+
+    useEffect(() => {
+        searchWeather("London");
+    }, []);
+    
   return (
     <div className={styles.weather}>
       <div className={styles.searchBar}>
