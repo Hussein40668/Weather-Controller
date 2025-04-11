@@ -73,3 +73,18 @@ font-size: 16px;
     margin-top: 10px;
     
 }
+
+.weatherDescription {
+    color: #df69e5;
+    font-size: 24px;
+    text-transform: capitalize;
+    margin: 10px 0;
+    font-weight: 400;
+}
+
+.forecastDescription {
+    color: #d7b69f;
+    font-size: 14px;
+    text-transform: capitalize;
+    display: block;
+}

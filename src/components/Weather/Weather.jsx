@@ -12,7 +12,7 @@ import styles from "./Weather.module.css";
 const Weather = () => {
   const inputRef = useRef(null);
   const [weatherData, setWeatherData] = useState(false);
-  const [forecastData, setForecastData] = useState([]); 
+  const [forecastData, setForecastData] = useState([]);
   const allIcons = {
     "01d": clear_icon,
     "01n": clear_icon,
@@ -40,7 +40,6 @@ const Weather = () => {
     }
 
     try {
-      // Fetch current weather
       const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${
         import.meta.env.VITE_APP_ID
       }`;
@@ -59,9 +58,9 @@ const Weather = () => {
         temperature: Math.floor(weatherData.main.temp),
         location: weatherData.name,
         icon: icon,
+        description: weatherData.weather[0].description,
       });
 
-      // Fetch 3-day forecast
       const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${
         import.meta.env.VITE_APP_ID
       }`;
@@ -74,16 +73,16 @@ const Weather = () => {
         return;
       }
 
-      // Filter forecast for one entry per day (e.g., at 12:00)
       const dailyForecast = forecastData.list
         .filter((item) => item.dt_txt.includes("12:00:00"))
-        .slice(0, 3) // Take first 3 days
+        .slice(0, 3)
         .map((item) => ({
           date: new Date(item.dt * 1000).toLocaleDateString("en-US", {
             weekday: "short",
           }),
           temperature: Math.floor(item.main.temp),
           icon: allIcons[item.weather[0].icon] || clear_icon,
+          description: item.weather[0].description,
         }));
 
       setForecastData(dailyForecast);
@@ -95,7 +94,7 @@ const Weather = () => {
   };
 
   useEffect(() => {
-    searchWeather("Addis Ababa"); 
+    searchWeather("Addis Ababa");
   }, []);
 
   return (
@@ -114,7 +113,9 @@ const Weather = () => {
           <img src={weatherData.icon} alt="" className={styles.weatherIcon} />
           <p className={styles.temperature}>{weatherData.temperature}°C</p>
           <p className={styles.location}>{weatherData.location}</p>
+          <p className={styles.weatherDescription}>{weatherData.description}</p>{" "}
 
+          {/* Styled description */}
           <div className={styles.weatherDeta}>
             <div className={styles.col}>
               <img src={humidity_icon} alt="" />
@@ -132,8 +133,6 @@ const Weather = () => {
               </div>
             </div>
           </div>
-
-          {/* New Forecast Section */}
           <div className={styles.weatherDeta}>
             {forecastData.map((day, index) => (
               <div key={index} className={styles.col}>
@@ -141,6 +140,10 @@ const Weather = () => {
                 <div>
                   <p>{day.temperature}°C</p>
                   <span>{day.date}</span>
+                  <span className={styles.forecastDescription}>
+                    {day.description}
+                  </span>{" "}
+                  {/* Styled forecast description */}
                 </div>
               </div>
             ))}
