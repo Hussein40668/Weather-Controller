@@ -12,6 +12,7 @@ import styles from "./Weather.module.css";
 const Weather = () => {
   const inputRef = useRef(null);
   const [weatherData, setWeatherData] = useState(false);
+  const [forecastData, setForecastData] = useState([]); 
   const allIcons = {
     "01d": clear_icon,
     "01n": clear_icon,
@@ -39,41 +40,68 @@ const Weather = () => {
     }
 
     try {
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${
+      // Fetch current weather
+      const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${
         import.meta.env.VITE_APP_ID
       }`;
+      const weatherResponse = await fetch(weatherUrl);
+      const weatherData = await weatherResponse.json();
 
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.message);
+      if (!weatherResponse.ok) {
+        alert(weatherData.message);
         return;
       }
-      const icon = allIcons[data.weather[0].icon] || clear_icon;
-      // console.log(data);
 
+      const icon = allIcons[weatherData.weather[0].icon] || clear_icon;
       setWeatherData({
-        humidity: data.main.humidity,
-        windSpeed: data.wind.speed,
-        temperature: Math.floor(data.main.temp),
-        location: data.name,
+        humidity: weatherData.main.humidity,
+        windSpeed: weatherData.wind.speed,
+        temperature: Math.floor(weatherData.main.temp),
+        location: weatherData.name,
         icon: icon,
       });
+
+      // Fetch 3-day forecast
+      const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${
+        import.meta.env.VITE_APP_ID
+      }`;
+      const forecastResponse = await fetch(forecastUrl);
+      const forecastData = await forecastResponse.json();
+
+      if (!forecastResponse.ok) {
+        console.error("Error fetching forecast:", forecastData.message);
+        setForecastData([]);
+        return;
+      }
+
+      // Filter forecast for one entry per day (e.g., at 12:00)
+      const dailyForecast = forecastData.list
+        .filter((item) => item.dt_txt.includes("12:00:00"))
+        .slice(0, 3) // Take first 3 days
+        .map((item) => ({
+          date: new Date(item.dt * 1000).toLocaleDateString("en-US", {
+            weekday: "short",
+          }),
+          temperature: Math.floor(item.main.temp),
+          icon: allIcons[item.weather[0].icon] || clear_icon,
+        }));
+
+      setForecastData(dailyForecast);
     } catch (error) {
       setWeatherData(false);
-      console.error("Error fetching weather data:", error);
+      setForecastData([]);
+      console.error("Error fetching data:", error);
     }
   };
 
   useEffect(() => {
-    searchWeather();
+    searchWeather("Addis Ababa"); 
   }, []);
 
   return (
     <div className={styles.weather}>
       <div className={styles.searchBar}>
-        <input ref={inputRef} type="text" placeholder="Search" />
+        <input ref={inputRef} type="text" placeholder="Search City" />
         <CiSearch
           onClick={() => searchWeather(inputRef.current.value)}
           size={60}
@@ -81,10 +109,9 @@ const Weather = () => {
         />
       </div>
 
-      {weatherData ? (
+      {weatherData && (
         <>
           <img src={weatherData.icon} alt="" className={styles.weatherIcon} />
-
           <p className={styles.temperature}>{weatherData.temperature}°C</p>
           <p className={styles.location}>{weatherData.location}</p>
 
@@ -92,7 +119,7 @@ const Weather = () => {
             <div className={styles.col}>
               <img src={humidity_icon} alt="" />
               <div>
-                <p>{weatherData.humidity}</p>
+                <p>{weatherData.humidity}%</p>
                 <span>Humidity</span>
               </div>
             </div>
@@ -100,14 +127,25 @@ const Weather = () => {
             <div className={styles.col}>
               <img src={wind_icon} alt="" />
               <div>
-                <p>{weatherData.windSpeed}</p>
+                <p>{weatherData.windSpeed} m/s</p>
                 <span>Wind Speed</span>
               </div>
             </div>
           </div>
+
+          {/* New Forecast Section */}
+          <div className={styles.weatherDeta}>
+            {forecastData.map((day, index) => (
+              <div key={index} className={styles.col}>
+                <img src={day.icon} alt="" />
+                <div>
+                  <p>{day.temperature}°C</p>
+                  <span>{day.date}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </>
-      ) : (
-        <></>
       )}
     </div>
   );
